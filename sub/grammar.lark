@@ -1,0 +1,101 @@
+start: instruction*
+
+// CASCADE LANG
+// Lark language instructions
+//
+// Instructions for the Cascade transpiler in Batch
+
+?instruction: assignment
+            | print_stmt
+            | if_stmt
+            | while_stmt
+            | for_num_stmt
+            | foreach_stmt
+            | walk_stmt
+            | readline_stmt
+            | use_stmt
+            | include_stmt
+            | waypoint_stmt
+            | fn_stmt
+            | fn_decl
+            | call_stmt
+            | return_stmt
+            | goto_stmt
+
+assignment    : "set" CNAME "[" expression "]" ":" type "=" expression -> array_element_assignment
+              | "set" CNAME ":" type "=" array_literal -> array_init_assignment
+              | "set" CNAME ":" type "=" expression
+print_stmt    : "writeln" "(" argument ")"
+goto_stmt     : "goto" "(" STRING ")"
+
+if_stmt       : "if" condition block elseif_clause* [else_clause]
+elseif_clause : "elseif" condition block -> elseif_block
+else_clause   : "else" block -> else_block
+
+while_stmt    : "while" condition block
+
+for_num_stmt  : "for" CNAME ":" expression "to" expression ["step" expression] block
+
+foreach_stmt  : "foreach" CNAME "in" argument block
+
+walk_stmt     : "walk" CNAME "in" argument "mask" argument block
+
+readline_stmt : "readline" CNAME "in" argument block
+
+block         : "{" instruction* "}"
+
+use_stmt      : "use" "<" libname ">"
+include_stmt  : "include" STRING
+waypoint_stmt : "label" STRING
+fn_stmt       : CNAME "::" CNAME "(" [arguments] ")"
+call_stmt     : CNAME "(" [arguments] ")"
+return_stmt   : "return" [expression]
+
+fn_modifiers  : CNAME*
+fn_decl       : fn_modifiers "func" CNAME "(" [params] ")" ["->" CNAME] "{" instruction* "}"
+
+param         : CNAME ":" CNAME
+params        : param ("," param)*
+type          : CNAME
+
+argument      : expression
+
+arguments     : argument ("," argument)*
+
+array_literal : "[" [array_elements] "]"
+array_elements: expression ("," expression)*
+
+?condition    : expression "==" expression -> eq
+              | expression "!=" expression -> neq
+              | expression "<" expression  -> lt
+              | expression "<=" expression -> lte
+              | expression ">" expression  -> gt
+              | expression ">=" expression -> gte
+
+?expression   : term
+              | expression "+" term -> add
+              | expression "-" term -> minus
+
+?term         : factor
+              | term "*" factor -> mul
+              | term "/" factor -> div
+              | term "%" factor -> mod
+
+?factor       : NUMBER -> num
+              | STRING -> str_val
+              | CNAME "[" expression "]" -> array_access
+              | CNAME  -> var
+              | "(" expression ")" -> bracket_expr
+              | call_stmt
+              | fn_stmt
+
+libname       : CNAME
+
+COMMENT       : "//" /[^\n]*/
+
+%import common.CNAME
+%import common.NUMBER
+%import common.ESCAPED_STRING -> STRING
+%import common.WS
+%ignore WS
+%ignore COMMENT
