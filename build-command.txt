@@ -1,1 +1,0 @@
-pyinstaller --noconfirm --onefile --console --icon "C:\Users\user\Desktop\Projects\Bpp\icon.ico"  "C:\Users\user\Desktop\Projects\Bpp\csc.py"
