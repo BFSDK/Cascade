@@ -12,13 +12,13 @@ import shutil
 #
 # Compilable-Transpiled Programming Language 
 #
-# Version: 1.2.4
+# Version: 1.2.5
 import sub.translator
 import sub.b2e
 import sub.errorlib as erl
 from sub.type_checker import TypeChecker
 
-version = "1.2.4; Compiler 1.3.0; TypeChecker 1.0.0 [non]"
+version = "1.2.5; Compiler 1.3.0; TypeChecker 1.0.0 [non]"
 
 def get_sub_dir():
     if getattr(sys, 'frozen', False):
