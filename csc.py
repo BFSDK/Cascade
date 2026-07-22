@@ -12,14 +12,14 @@ import shutil
 #
 # Compilable-Transpiled Programming Language 
 #
-# Version: 1.2.1
+# Version: 1.2.2
 
 import sub.translator
 import sub.b2e
 import sub.errorlib as erl
 from sub.type_checker import TypeChecker
 
-version = "1.2.0; Compiler 1.0.1; TypeChecker 1.0.0"
+version = "1.2.2; Compiler 1.2.0; TypeChecker 1.0.0"
 
 def get_sub_dir():
     if getattr(sys, 'frozen', False):
@@ -98,6 +98,6 @@ if code.strip() != "":
     translated = sub.translator.translatecode(code)
     if translated:
 
-        # print(translated)
+        print(translated)
 
         filerun(translated)
