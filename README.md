@@ -2,7 +2,7 @@
   <img src="readme/logo.png" height="80" alt="Cascade logo">
 </p>
 <p align="center">
-    <em>A compiled-transpiled strictly-typed programming language powered by Go.</em>
+    <em>A source-to-source compiled strictly-typed programming language.</em>
 </p>
 <p align="center">
   <img src="https://img.shields.io/badge/status-active-brightgreen" alt="Project Status">
