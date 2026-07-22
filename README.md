@@ -15,6 +15,11 @@
 
 **Cascade** is a strongly-typed, imperative programming language that transpiles directly into clean, efficient Go code before compiling into standalone, high-performance `.exe` binaries. It combines a clean, expressible syntax with high-speed execution, static type checking, and rich built-in libraries for system and pseudo-symbolic graphics development.
 
+> [!WARNING]
+> **Prerequisites for Compilation:**
+> Before compiling projects, ensure you have copied the `go` compiler directory into the Cascade installation root folder. 
+> The target folder name must be strictly named `go`.
+
 ## Key Features
 * **Static Type Checking** — Catches type mismatches, unimported modules, and syntax issues at compile time.
 * **Transpiled to Go** — Generates fast, native machine code with zero external runtime dependencies on the target machine.
