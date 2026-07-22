@@ -2,7 +2,7 @@
   <img src="readme/logo.png" height="80" alt="Cascade logo">
 </p>
 <p align="center">
-    <em>A compiled-transpiled strictly-typed programming language.</em>
+    <em>A compiled-transpiled strictly-typed programming language powered by Go.</em>
 </p>
 <p align="center">
   <img src="https://img.shields.io/badge/status-active-brightgreen" alt="Project Status">
@@ -13,17 +13,18 @@
 
 ---
 
-**Cascade** is a strongly-typed programming language that transpiles directly into optimized Windows Batch (`.cmd` / `.bat`) scripts before compiling to .exe. It provides static type checking, clean function declarations, control flow structures, and modular imports without requiring complex runtime dependencies.
+**Cascade** is a strongly-typed, imperative programming language that transpiles directly into clean, efficient Go code before compiling into standalone, high-performance `.exe` binaries. It combines a clean, expressible syntax with high-speed execution, static type checking, and rich built-in libraries for system and pseudo-symbolic graphics development.
 
 ## Key Features
-* **Static Type Checking** — Catches type mismatches and argument errors at compile time before execution.
-* **Modern Syntax** — Supports structured functions, typed parameters, explicit return types, and clean variable definitions.
-* **Batch Transpilation** — Output runs natively on any Windows command line environment without extra runtimes.
-* **Standard Library Support** — Import pre-built standard modules using standard syntax.
+* **Static Type Checking** — Catches type mismatches, unimported modules, and syntax issues at compile time.
+* **Transpiled to Go** — Generates fast, native machine code with zero external runtime dependencies on the target machine.
+* **Modern Control Flow** — Structured functions, flexible loops (`while`, `for ... to`, `foreach`), mutation controls (`mut`, `incr`), and expressible conditional logic.
+* **Pseudo-Symbolic Graphics (`psgraph`)** — Built-in library for flicker-free ANSI console positioning, cursor management, and terminal UI/3D rendering.
+* **Rich Standard Ecosystem** — Native support for string manipulation, file system iteration (`walk`, `readline`), array operations, and system utilities.
 
 ## Code Examples
 
-_Hello, world!_
+### *Hello, World!*
 ```cascade
 use <std>
 
@@ -34,50 +35,84 @@ func main() {
 
 ```
 
-*Functions and Type Checking*
+### *Functions, Mutations & Expressions*
 
 ```cascade
 use <std>
 
-func greeting(name : str, age : num) -> str {
-    return "Hello, !name!! You are !age! years old."
+func add(a : int, b : int) -> int {
+    return a + b
 }
 
-pre func main() {
-    set user_name : str = "John"
-    set user_age : num = 14
+func main() {
+    set x : int = 5
+    set y : int = 10
+    
+    // Direct function call in expression & condition
+    if add(x, y) == 15 {
+        writeln("Result is exactly 15!")
+    }
 
-    set message : str = greeting(user_name, user_age)
-    std::echo(message)
-    std::pause()
+    // Mutating and incrementing variables
+    mut x = 20
+    incr x +
+    writeln(x) // Prints 21
 }
 
 ```
 
-*Loops and Counter*
+### *Console Pseudo-Graphics (`psgraph`)*
+
+```cascade
+use <psgraph>
+use <env>
+
+func main() {
+    psgraph::hide_cursor()
+    psgraph::clear()
+
+    // Draw at specific screen coordinates (X, Y)
+    psgraph::gotoxy(10, 5)
+    write("Point A")
+
+    psgraph::gotoxy(20, 5)
+    write("Point B")
+
+    psgraph::gotoxy(0, 10)
+    psgraph::show_cursor()
+}
+
+```
+
+### *Loops & File System Processing*
 
 ```cascade
 use <std>
 
 func main() {
-    for i : 1 to 10 {
+    // Range loops
+    for i : 1 to 5 step 1 {
         writeln(i)
     }
-    std::pause()
+
+    // Processing file lines
+    readline line in "data.txt" {
+        writeln(line)
+    }
 }
 
 ```
 
 ## Compilation & Usage
 
-To compile a Cascade script (`.csc` or `.cas`) into executable .exe, run the transpiler CLI:
+To compile a Cascade script (`.csc`) into a native executable `.exe`, run the Cascade CLI tool:
 
 ```powershell
 csc script.csc
 
 ```
 
-This generates a compiled `.cmd` file ready to run directly on Windows systems.
+This transpiles the script into optimized Go code and invokes the compiler to produce a standalone `.exe` binary ready to execute on Windows.
 
 ```
 
