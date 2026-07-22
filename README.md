@@ -19,6 +19,8 @@
 > **Prerequisites for Compilation:**
 > Before compiling projects, ensure you have copied the `go` compiler directory into the Cascade installation root folder. 
 > The target folder name must be strictly named `go`.
+> 
+> If you download the release, you don't need to install anything separately.
 
 ## Key Features
 * **Static Type Checking** — Catches type mismatches, unimported modules, and syntax issues at compile time.
