@@ -1,8 +1,10 @@
 from lark import Token, Tree
+
+### ARCHIVE ###
+
 try:
     from sub.errorlib import showFastError
 except ImportError:
-    # Фолбэк, если модуль вызывается напрямую
     def showFastError(msg, line=None):
         print(f"[Type Error] {msg}")
 
@@ -15,7 +17,6 @@ class TypeChecker:
         self.functions = {}
         self.current_function = None
         
-        # Системные функции std библиотеки
         self.builtin_functions = {
             "std::echo": {"params": [("val", "any")], "return_type": "void"},
             "std::str_len": {"params": [("s", "str")], "return_type": "int"},
@@ -26,7 +27,6 @@ class TypeChecker:
         }
 
     def check(self, tree):
-        """Главный входной метод проверки типов"""
         try:
             self.functions = self.builtin_functions.copy()
             self._collect_functions(tree)
@@ -37,7 +37,6 @@ class TypeChecker:
             return False
 
     def _collect_functions(self, node):
-        """Первый проход: собирает все пользовательские функции"""
         if not isinstance(node, Tree):
             return
 
@@ -79,13 +78,11 @@ class TypeChecker:
         return str(node).strip()
 
     def _types_are_compatible(self, expected, actual):
-        """Проверка совместимости типов (с учётом эквивалентов int/num и any)"""
         if expected == "any" or actual == "any" or actual == "unknown":
             return True
         if expected == actual:
             return True
         
-        # Эквиваленты числовых типов Cascade/Go
         num_types = ("num", "int", "float")
         if expected in num_types and actual in num_types:
             return True
@@ -93,7 +90,6 @@ class TypeChecker:
         return False
 
     def _infer_expression_type(self, expr):
-        """Вычисление типа выражения"""
         if isinstance(expr, Token):
             if expr.type == 'NUMBER':
                 return "float" if "." in str(expr) else "int"
@@ -104,11 +100,10 @@ class TypeChecker:
                 if var_name in ("true", "false"):
                     return "bool"
                 if var_name not in self.variables:
-                    raise TypeErrorException(f"Использована необъявленная переменная: '{var_name}'")
+                    raise TypeErrorException(f"Undeclared variable used: '{var_name}'")
                 return self.variables[var_name]
 
         if isinstance(expr, Tree):
-            # Вызов функции
             if expr.data in ('call_stmt', 'func_call', 'call'):
                 self._check_function_call(expr)
                 fn_name = str(expr.children[0])
@@ -116,21 +111,18 @@ class TypeChecker:
                     return self.functions[fn_name]["return_type"]
                 return "any"
 
-            # Арифметика
             if expr.data in ('add', 'minus', 'mul', 'div', 'mod'):
                 left_type = self._infer_expression_type(expr.children[0])
                 right_type = self._infer_expression_type(expr.children[1])
                 
                 if left_type == "str" or right_type == "str":
                     if expr.data == 'add':
-                        return "str" # Конкатенация
+                        return "str"
                 return "int" if left_type == "int" and right_type == "int" else "num"
 
-            # Логические операции и сравнения
             if expr.data in ('eq', 'neq', 'gt', 'lt', 'gte', 'lte', 'and', 'or', 'not', 'condition'):
                 return "bool"
 
-            # Строки, массивы и переменные
             if expr.data == 'str_val':
                 return "str"
             if expr.data == 'bool_val':
@@ -138,13 +130,13 @@ class TypeChecker:
             if expr.data == 'var':
                 var_name = str(expr.children[0])
                 if var_name not in self.variables:
-                    raise TypeErrorException(f"Использована необъявленная переменная: '{var_name}'")
+                    raise TypeErrorException(f"Undeclared variable used: '{var_name}'")
                 return self.variables[var_name]
             if expr.data == 'array_access':
                 arr_name = str(expr.children[0])
                 if arr_name not in self.variables:
-                    raise TypeErrorException(f"Массив не объявлен: '{arr_name}'")
-                return "any" # Элемент массива может быть dynamic / interface{}
+                    raise TypeErrorException(f"Array not declared: '{arr_name}'")
+                return "any"
 
             for child in expr.children:
                 if isinstance(child, (Tree, Token)):
@@ -222,8 +214,8 @@ class TypeChecker:
 
         if not self._types_are_compatible(declared_type, inferred_type):
             raise TypeErrorException(
-                f"Ошибка типа для переменной '{var_name}': ожидался тип '{declared_type}', "
-                f"но получено значение типа '{inferred_type}'."
+                f"Type error for variable '{var_name}': expected type '{declared_type}', "
+                f"but got value of type '{inferred_type}'."
             )
 
         self.variables[var_name] = declared_type
@@ -238,8 +230,8 @@ class TypeChecker:
         if not has_expr:
             if expected_type != "void":
                 raise TypeErrorException(
-                    f"Функция '{self.current_function}' должна возвращать '{expected_type}', "
-                    f"но ничего не возвращает."
+                    f"Function '{self.current_function}' expected to return '{expected_type}', "
+                    f"but returns nothing."
                 )
             return
 
@@ -247,8 +239,8 @@ class TypeChecker:
 
         if expected_type != "void" and not self._types_are_compatible(expected_type, actual_type):
             raise TypeErrorException(
-                f"Несоответствие типа return в функции '{self.current_function}': "
-                f"Заявлен тип '{expected_type}', но возвращается '{actual_type}'."
+                f"Return type mismatch in function '{self.current_function}': "
+                f"Declared type '{expected_type}', but returning '{actual_type}'."
             )
 
     def _visit_call_stmt(self, tree):
@@ -274,8 +266,8 @@ class TypeChecker:
 
         if len(raw_args) != len(expected_params):
             raise TypeErrorException(
-                f"Ошибка вызова функции '{fn_name}': ожидалось аргументов: {len(expected_params)}, "
-                f"но передано: {len(raw_args)}."
+                f"Function call error for '{fn_name}': expected {len(expected_params)} arguments, "
+                f"but got {len(raw_args)}."
             )
 
         for index, (arg_node, (param_name, expected_type)) in enumerate(zip(raw_args, expected_params)):
@@ -283,6 +275,6 @@ class TypeChecker:
 
             if not self._types_are_compatible(expected_type, actual_type):
                 raise TypeErrorException(
-                    f"Ошибка типа в аргументе {index + 1} ('{param_name}') при вызове '{fn_name}': "
-                    f"Ожидался тип '{expected_type}', но передан '{actual_type}'."
+                    f"Type error in argument {index + 1} ('{param_name}') when calling '{fn_name}': "
+                    f"Expected type '{expected_type}', but got '{actual_type}'."
                 )

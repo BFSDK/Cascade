@@ -428,6 +428,11 @@ func mustErr(err error) {
         if lib_name == "convert":
             return f'{func_name}({clean_args[0]})'
 
+        if lib_name == "strcon":
+            self.imports.add("strconv")
+            if func_name == "itoa":
+                return f'strconv.Itoa({clean_args[0]})'
+
         args_str = ", ".join(clean_args)
         return f"{lib_name}.{func_name}({args_str})"
     
@@ -436,6 +441,17 @@ func mustErr(err error) {
         if arg is None or str(arg).strip() == "":
             return ""
         return f"fmt.Print({self._unwrap(arg).strip()})"
+
+    def writef_stmt(self, args):
+        raw_args = args[0] if isinstance(args[0], list) else [args[0]]
+        
+        clean_args = [self._unwrap(arg).strip() for arg in raw_args if arg is not None]
+        
+        if not clean_args:
+            return ""
+            
+        formatted_args = ", ".join(clean_args)
+        return f"fmt.Printf({formatted_args})"
 
     def call_stmt(self, args):
         fn_name = str(args[0])
