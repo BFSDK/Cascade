@@ -56,11 +56,11 @@ writef_stmt   : "writef" "(" arguments ")"
 goto_stmt     : "goto" "(" STRING ")"
 break_stmt    : "break"
 
-if_stmt       : "if" condition block elseif_clause* [else_clause]
-elseif_clause : "elseif" condition block -> elseif_block
+if_stmt       : "if" "(" condition ")" block elseif_clause* [else_clause]
+elseif_clause : "elseif" "(" condition ")" block -> elseif_block
 else_clause   : "else" block -> else_block
 
-while_stmt    : "while" condition block
+while_stmt    : "while" "(" condition ")" block
 
 for_num_stmt  : "for" CNAME ":" expression "to" expression ["step" expression] block
 
@@ -93,13 +93,15 @@ arguments     : argument ("," argument)*
 array_literal : "[" [array_elements] "]"
 array_elements: expression ("," expression)*
 
-?condition    : expression -> cond_expr
-              | expression "==" expression -> eq
+?condition    : logic_expr
+
+?logic_expr   : expression "==" expression -> eq
               | expression "!=" expression -> neq
-              | expression "<" expression  -> lt
               | expression "<=" expression -> lte
-              | expression ">" expression  -> gt
+              | expression "<" expression  -> lt
               | expression ">=" expression -> gte
+              | expression ">" expression  -> gt
+              | expression -> cond_expr
 
 ?expression   : term
               | expression "+" term -> add
@@ -111,6 +113,7 @@ array_elements: expression ("," expression)*
               | term "%" factor -> mod
 
 ?factor       : NUMBER -> num
+              | BOOLEAN -> bool_val
               | "-" factor -> neg
               | STRING -> str_val
               | CNAME "[" expression "]" -> array_access
@@ -121,6 +124,9 @@ array_elements: expression ("," expression)*
               | struct_instantiation             
               | CNAME "." CNAME -> struct_access 
               | map_literal
+
+
+BOOLEAN       : "true" | "false"
 
 map_entry     : expression ":" expression
 map_entries   : map_entry ("," map_entry)*

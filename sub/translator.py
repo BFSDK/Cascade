@@ -220,21 +220,21 @@ class GoTransformer(Transformer):
     def struct_decl(self, args):
         has_pub = False
         idx = 0
-        
-        # Получаем значение первого аргумента с учетом узлов дерева Lark
+
         first_arg = args[0]
         if isinstance(first_arg, Tree):
             first_val = str(first_arg.children[0]).strip() if first_arg.children else ""
         else:
-            first_val = str(first_arg).strip()
+            first_val = str(first_arg).strip() if first_arg is not None else ""
 
         if first_val == "pub":
             has_pub = True
             idx = 1
+        elif first_val in ("none", ""):
+            idx = 1  
 
         struct_name = str(args[idx]).strip()
         
-        # В Go публичные структуры ОБЯЗАНЫ начинаться с заглавной буквы
         go_struct_name = _capitalize(struct_name) if has_pub else struct_name
 
         fields = args[idx + 1] if len(args) > idx + 1 and isinstance(args[idx + 1], list) else []
@@ -242,10 +242,8 @@ class GoTransformer(Transformer):
 
         code = f"type {go_struct_name} struct {{\n{fields_str}\n}}"
         
-        # Если структура объявлена в текущем файле, добавляем её в user_functions
         self.user_functions.append(code)
 
-        # Если структура публичная, сохраняем её для импорта через include
         if has_pub:
             self.public_compiled_code.append(code)
 
@@ -254,6 +252,9 @@ class GoTransformer(Transformer):
     def struct_instantiation(self, args):
         struct_name = str(args[0]).strip()
         return f"{_capitalize(struct_name)}{{}}"
+
+    def bool_val(self, args):
+        return str(args[0]).lower()
 
     def map_entry(self, args):
         key = self._unwrap(args[0]).strip()
@@ -426,6 +427,16 @@ class GoTransformer(Transformer):
                 return f"{clean_args[0]} = append({clean_args[0]}, {clean_args[1]})"
             if func_name == "len":
                 return f"len({clean_args[0]})"
+            if func_name == "has":
+                return f"func() bool {{ for _, v := range {clean_args[0]} {{ if v == {clean_args[1]} {{ return true }} }}; return false }}()"
+
+        if lib_name == "map":
+            if func_name == "len":
+                return f"len({clean_args[0]})"
+            if func_name == "delete":
+                return f"delete({clean_args[0]}, {clean_args[1]})"
+            if func_name == "has":
+                return f"func() bool {{ _, ok := {clean_args[0]}[{clean_args[1]}]; return ok }}()"
             
         if lib_name == "random":
             self.imports.add("math/rand")
@@ -798,8 +809,8 @@ func GetPressedKeys() []int {
                 idx += 1
 
         fn_name = str(args[idx]).strip()
-
-        if fn_name == "main": fn_name = "preload"
+        if fn_name == "main": 
+            fn_name = "preload"
 
         idx += 1
 
@@ -812,11 +823,15 @@ func GetPressedKeys() []int {
             elif hasattr(curr, 'data') and curr.data == 'params':
                 fn_params = [str(p.children[0]) for p in curr.children if hasattr(p, 'children')]
                 idx += 1
+            elif curr is None:
+                idx += 1
 
         ret_type = ""
-        if idx < len(args) and isinstance(args[idx], str) and args[idx] not in ("{", "}"):
-            ret_type = f" {self._map_type(args[idx])}"
-            idx += 1
+        if idx < len(args) and isinstance(args[idx], (str, Token)):
+            val = str(args[idx]).strip()
+            if val and not val.startswith("return") and not val.startswith("var ") and "\n" not in val:
+                ret_type = f" {self._map_type(val)}"
+                idx += 1
 
         body_items = args[idx:]
         body_instructions = []
