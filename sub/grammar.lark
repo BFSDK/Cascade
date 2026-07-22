@@ -26,8 +26,10 @@ start: instruction*
             | incr_stmt
             | write_stmt
             | writef_stmt
+            | struct_decl
+            | struct_field_assignment
 
-assignment    : "set" CNAME "[" expression "]" ":" type "=" expression -> array_element_assignment
+assignment    : "set" CNAME "[" expression "]" "=" expression -> array_element_assignment
               | "set" CNAME ":" type "=" array_literal -> array_init_assignment
               | "set" CNAME ":" type "=" expression
 
@@ -37,6 +39,16 @@ incr_stmt     : "incr" CNAME (INCRPLUS | INCRMINUS)
 
 INCRPLUS          : "+"
 INCRMINUS         : "-"
+
+struct_modifier : CNAME
+
+struct_decl   : [struct_modifier] "struct" CNAME "{" [struct_fields] "}"
+struct_field  : CNAME ":" type
+struct_fields : struct_field ("," struct_field)*
+
+struct_instantiation    : CNAME "{" "}"
+
+struct_field_assignment : "set" CNAME "." CNAME "=" expression
 
 print_stmt    : "writeln" "(" argument ")"
 write_stmt    : "write" "(" argument ")"
@@ -81,7 +93,8 @@ arguments     : argument ("," argument)*
 array_literal : "[" [array_elements] "]"
 array_elements: expression ("," expression)*
 
-?condition    : expression "==" expression -> eq
+?condition    : expression -> cond_expr
+              | expression "==" expression -> eq
               | expression "!=" expression -> neq
               | expression "<" expression  -> lt
               | expression "<=" expression -> lte
@@ -105,6 +118,13 @@ array_elements: expression ("," expression)*
               | "(" expression ")" -> bracket_expr
               | call_stmt
               | fn_stmt
+              | struct_instantiation             
+              | CNAME "." CNAME -> struct_access 
+              | map_literal
+
+map_entry     : expression ":" expression
+map_entries   : map_entry ("," map_entry)*
+map_literal   : "{" [map_entries] "}"
 
 libname       : CNAME
 

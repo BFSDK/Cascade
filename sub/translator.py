@@ -15,6 +15,10 @@ def get_base_dir():
         return os.path.dirname(os.path.abspath(sys.executable))
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+def _capitalize(s):
+    s = str(s).strip()
+    return s[0].upper() + s[1:] if s else s
+
 BASE_DIR = get_base_dir()
 
 def clean_lib_name(val):
@@ -127,12 +131,32 @@ class GoTransformer(Transformer):
             return "[]interface{}"
         if t == "bool":
             return "bool"
-        return "interface{}"
+        if t == "map":
+            return "map[string]interface{}"
+
+        
+        return t
     
     def _unwrap(self, val):
         if isinstance(val, dict) and val.get("is_call"):
             return val["code"]
         return str(val) if val is not None else ""
+
+    def struct_access(self, args):
+        var_name = str(args[0]).strip()
+        field_name = str(args[1]).strip()
+        return f"{var_name}.{_capitalize(field_name)}"
+
+    def struct_field_assignment(self, args):
+        var_name = str(args[0]).strip()
+        field_name = str(args[1]).strip()
+        value = str(args[2]).strip()
+        return f"{var_name}.{_capitalize(field_name)} = {value}"
+
+    def struct_access(self, args):
+        var_name = str(args[0]).strip()
+        field_name = str(args[1]).strip()
+        return f"{var_name}.{_capitalize(field_name)}"
 
     def assignment(self, args):
         var_name = str(args[0]).strip()
@@ -176,13 +200,78 @@ class GoTransformer(Transformer):
     def array_element_assignment(self, args):
         var_name = str(args[0]).strip()
         idx = str(args[1]).strip()
-        value = str(args[3]).strip()
+        value = str(args[2]).strip()
         return f"{var_name}[{idx}] = {value}"
 
     def array_access(self, args):
         array_name = str(args[0]).strip()
         idx = str(args[1]).strip()
         return f"{array_name}[{idx}]"
+
+    def struct_field(self, args):
+        field_name = str(args[0]).strip()
+        field_name_go = _capitalize(field_name) 
+        field_type = self._map_type(args[1])
+        return f"\t{field_name_go} {field_type}"
+
+    def struct_fields(self, args):
+        return [str(arg) for arg in args if arg is not None]
+
+    def struct_decl(self, args):
+        has_pub = False
+        idx = 0
+        
+        # Получаем значение первого аргумента с учетом узлов дерева Lark
+        first_arg = args[0]
+        if isinstance(first_arg, Tree):
+            first_val = str(first_arg.children[0]).strip() if first_arg.children else ""
+        else:
+            first_val = str(first_arg).strip()
+
+        if first_val == "pub":
+            has_pub = True
+            idx = 1
+
+        struct_name = str(args[idx]).strip()
+        
+        # В Go публичные структуры ОБЯЗАНЫ начинаться с заглавной буквы
+        go_struct_name = _capitalize(struct_name) if has_pub else struct_name
+
+        fields = args[idx + 1] if len(args) > idx + 1 and isinstance(args[idx + 1], list) else []
+        fields_str = "\n".join(fields)
+
+        code = f"type {go_struct_name} struct {{\n{fields_str}\n}}"
+        
+        # Если структура объявлена в текущем файле, добавляем её в user_functions
+        self.user_functions.append(code)
+
+        # Если структура публичная, сохраняем её для импорта через include
+        if has_pub:
+            self.public_compiled_code.append(code)
+
+        return ""
+
+    def struct_instantiation(self, args):
+        struct_name = str(args[0]).strip()
+        return f"{_capitalize(struct_name)}{{}}"
+
+    def map_entry(self, args):
+        key = self._unwrap(args[0]).strip()
+        val = self._unwrap(args[1]).strip()
+        return f"{key}: {val}"
+
+    def map_entries(self, args):
+        return ", ".join(str(arg) for arg in args if arg is not None)
+
+    def map_literal(self, args):
+        if not args or args[0] is None:
+            entries_str = ""
+        elif isinstance(args[0], list):
+            entries_str = ", ".join(str(x) for x in args[0])
+        else:
+            entries_str = str(args[0])
+
+        return f"map[string]interface{{}}{{{entries_str}}}"
 
     def print_stmt(self, args):
         arg = args[0]
@@ -433,6 +522,104 @@ func mustErr(err error) {
             if func_name == "itoa":
                 return f'strconv.Itoa({clean_args[0]})'
 
+        if lib_name == "keypress":
+            self.imports.add("syscall")
+            self.need_funcs += """
+var (
+	user32 = syscall.NewLazyDLL("user32.dll")
+	getAsyncKeyState = user32.NewProc("GetAsyncKeyState")
+)
+
+const (
+	VK_BACK    = 0x08
+	VK_TAB     = 0x09
+	VK_RETURN  = 0x0D
+	VK_SHIFT   = 0x10
+	VK_CONTROL = 0x11
+	VK_MENU    = 0x12 
+	VK_PAUSE   = 0x13
+	VK_CAPITAL = 0x14
+	VK_ESCAPE  = 0x1B
+	VK_SPACE   = 0x20
+	VK_PRIOR   = 0x21 
+	VK_NEXT    = 0x22 
+	VK_END     = 0x23
+	VK_HOME    = 0x24
+	VK_LEFT    = 0x25
+	VK_UP      = 0x26
+	VK_RIGHT   = 0x27
+	VK_DOWN    = 0x28
+	VK_DELETE  = 0x2E
+	VK_0       = 0x30
+	VK_1       = 0x31
+	VK_2       = 0x32
+	VK_3       = 0x33
+	VK_4       = 0x34
+	VK_5       = 0x35
+	VK_6       = 0x36
+	VK_7       = 0x37
+	VK_8       = 0x38
+	VK_9       = 0x39
+	VK_A       = 0x41
+	VK_B       = 0x42
+	VK_C       = 0x43
+	VK_D       = 0x44
+	VK_E       = 0x45
+	VK_F       = 0x46
+	VK_G       = 0x47
+	VK_H       = 0x48
+	VK_I       = 0x49
+	VK_J       = 0x4A
+	VK_K       = 0x4B
+	VK_L       = 0x4C
+	VK_M       = 0x4D
+	VK_N       = 0x4E
+	VK_O       = 0x4F
+	VK_P       = 0x50
+	VK_Q       = 0x51
+	VK_R       = 0x52
+	VK_S       = 0x53
+	VK_T       = 0x54
+	VK_U       = 0x55
+	VK_V       = 0x56
+	VK_W       = 0x57
+	VK_X       = 0x58
+	VK_Y       = 0x59
+	VK_Z       = 0x5A
+	VK_F1      = 0x70
+	VK_F2      = 0x71
+	VK_F3      = 0x72
+	VK_F4      = 0x73
+	VK_F5      = 0x74
+	VK_F6      = 0x75
+	VK_F7      = 0x76
+	VK_F8      = 0x77
+	VK_F9      = 0x78
+	VK_F10     = 0x79
+	VK_F11     = 0x7A
+	VK_F12     = 0x7B
+)
+
+func IsKeyPressed(vkCode int) bool {
+	ret, _, _ := getAsyncKeyState.Call(uintptr(vkCode))
+	return (ret & 0x8000) != 0
+}
+
+func GetPressedKeys() []int {
+	var pressed []int
+	// Проверяем все возможные клавиши (0-255)
+	for vk := 0; vk < 256; vk++ {
+		if IsKeyPressed(vk) {
+			pressed = append(pressed, vk)
+		}
+	}
+	return pressed
+}\n
+"""
+            if func_name == "iskey":
+                key = clean_args[0].strip('"')
+                return f'IsKeyPressed({key})'
+
         args_str = ", ".join(clean_args)
         return f"{lib_name}.{func_name}({args_str})"
     
@@ -452,6 +639,12 @@ func mustErr(err error) {
             
         formatted_args = ", ".join(clean_args)
         return f"fmt.Printf({formatted_args})"
+
+    def cond_expr(self, args):
+        val = args[0]
+        if hasattr(val, 'children') and val.children:
+            val = val.children[0]
+        return self._unwrap(val)
 
     def call_stmt(self, args):
         fn_name = str(args[0])
@@ -682,6 +875,10 @@ func mustErr(err error) {
         for pub_code in lib_transformer.public_compiled_code:
             if pub_code not in self.user_functions:
                 self.user_functions.append(pub_code)
+            if pub_code not in self.public_compiled_code:
+                self.public_compiled_code.append(pub_code)
+
+        self.public_functions.extend(lib_transformer.public_functions)
 
         self.public_functions.extend(lib_transformer.public_functions)
         self.included_files.update(lib_transformer.included_files)
