@@ -2,6 +2,9 @@
   <img src="readme/logo.png" height="80" alt="Cascade logo">
 </p>
 <p align="center">
+    <strong>The Cascade programming language</strong>
+</p>
+<p align="center">
     <em>A source-to-source compiled strictly-typed programming language.</em>
 </p>
 <p align="center">
