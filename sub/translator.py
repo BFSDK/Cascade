@@ -589,6 +589,9 @@ func mustErr(err error) {
                 idx += 1
 
         fn_name = str(args[idx]).strip()
+
+        if fn_name == "main": fn_name = "preload"
+
         idx += 1
 
         fn_params = []
@@ -635,6 +638,9 @@ func mustErr(err error) {
             self.public_compiled_code.append(fn_code)
 
         return ""
+
+    def neg(self, args):
+        return f"-{self._unwrap(args[0])}"
 
     def include_stmt(self, args):
         raw_path = str(args[0]).strip('"\'')

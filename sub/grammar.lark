@@ -96,6 +96,7 @@ array_elements: expression ("," expression)*
               | term "%" factor -> mod
 
 ?factor       : NUMBER -> num
+              | "-" factor -> neg
               | STRING -> str_val
               | CNAME "[" expression "]" -> array_access
               | CNAME  -> var
@@ -108,7 +109,7 @@ libname       : CNAME
 COMMENT       : "//" /[^\n]*/
 
 %import common.CNAME
-%import common.NUMBER
+NUMBER : /-?\d+(\.\d+)?/
 %import common.ESCAPED_STRING -> STRING
 %import common.WS
 %ignore WS
