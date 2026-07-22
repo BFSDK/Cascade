@@ -22,8 +22,8 @@ def download_module(module_id: str):
     filename = f"{module_id}.csc"
     output_path = os.path.join(modules_dir, filename)
 
-    commit_hash = "4171b30847572603314325087e31ce18f327e11c"
-    url = f"https://raw.githubusercontent.com/BFSDK/Cascade/{commit_hash}/libraries/{filename}"
+    branch = "main"
+    url = f"https://raw.githubusercontent.com/BFSDK/Cascade/{branch}/libraries/{filename}"
 
     print(f"[*] Downloading module '{module_id}'...")
     print(f"[*] URL: {url}")
@@ -43,7 +43,7 @@ def download_module(module_id: str):
     except urllib.error.HTTPError as e:
         print(f"[!] HTTP Error {e.code}: Couldn't find or download the file.")
         if e.code == 404:
-            print(f"[!] Make sure that the '{module_id}' сmodule exists in the repository. ")
+            print(f"[!] Make sure that the '{module_id}' module exists in the repository.")
         sys.exit(1)
     except urllib.error.URLError as e:
         print(f"[!] Network error: {e.reason}")
