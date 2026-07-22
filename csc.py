@@ -98,6 +98,6 @@ if code.strip() != "":
     translated = sub.translator.translatecode(code)
     if translated:
 
-        print(translated)
+        # print(translated)
 
         filerun(translated)
