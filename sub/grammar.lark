@@ -62,13 +62,13 @@ else_clause   : "else" block -> else_block
 
 while_stmt    : "while" "(" condition ")" block
 
-for_num_stmt  : "for" CNAME ":" expression "to" expression ["step" expression] block
+for_num_stmt  : "for" "(" CNAME ":" expression "to" expression ")" ["step" expression] block
 
-foreach_stmt  : "foreach" CNAME "in" argument block
+foreach_stmt  : "foreach" "(" CNAME "in" argument ")" block
 
-walk_stmt     : "walk" CNAME "in" argument "mask" argument block
+walk_stmt     : "walk" "(" CNAME "in" argument "mask" argument ")" block
 
-readline_stmt : "readline" CNAME "in" argument block
+readline_stmt : "readline" "(" CNAME "in" argument ")" block
 
 block         : "{" instruction* "}"
 
