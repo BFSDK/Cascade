@@ -55,8 +55,8 @@ func add(a : int, b : int) -> int {
 }
 
 pre func main() {
-    set x : int = 5
-    set y : int = 10
+    x : int := 5
+    y : int := 10
     
     // Direct function call in expression & condition
     if (add(x, y) == 15) {
@@ -64,7 +64,7 @@ pre func main() {
     }
 
     // Mutating and incrementing variables
-    mut x = 20
+    x = 20
     incr x +
     writeln(x) // Prints 21
 }
