@@ -330,15 +330,15 @@ class GoTransformer(Transformer):
         return [self._unwrap(arg) for arg in args if arg is not None]
     
     def incr_stmt(self, args):
-        var_name = str(args[0]).strip()
+        target = self._unwrap(args[0]).strip()
         op = str(args[1]).strip()
         
         if op == "+":
-            return f"{var_name}++"
+            return f"{target}++"
         elif op == "-":
-            return f"{var_name}--"
+            return f"{target}--"
             
-        return f"ARGUMENTS: {var_name}, {op}"
+        return f"ARGUMENTS: {target}, {op}"
 
     def use_stmt(self, args):
         libname = clean_lib_name(args[0])
@@ -535,7 +535,8 @@ func mustErr(err error) {
 
         if lib_name == "keypress":
             self.imports.add("syscall")
-            self.need_funcs += """
+            if "user32 = syscall.NewLazyDLL" not in self.need_funcs:
+                self.need_funcs += """
 var (
 	user32 = syscall.NewLazyDLL("user32.dll")
 	getAsyncKeyState = user32.NewProc("GetAsyncKeyState")
@@ -618,7 +619,6 @@ func IsKeyPressed(vkCode int) bool {
 
 func GetPressedKeys() []int {
 	var pressed []int
-	// Проверяем все возможные клавиши (0-255)
 	for vk := 0; vk < 256; vk++ {
 		if IsKeyPressed(vk) {
 			pressed = append(pressed, vk)
@@ -639,6 +639,14 @@ func GetPressedKeys() []int {
         if arg is None or str(arg).strip() == "":
             return ""
         return f"fmt.Print({self._unwrap(arg).strip()})"
+
+    def incr_var(self, args):
+        return str(args[0]).strip()
+
+    def incr_struct_field(self, args):
+        var_name = str(args[0]).strip()
+        field_name = str(args[1]).strip()
+        return f"{var_name}.{_capitalize(field_name)}"
 
     def writef_stmt(self, args):
         raw_args = args[0] if isinstance(args[0], list) else [args[0]]
