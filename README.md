@@ -38,7 +38,7 @@
 ```cascade
 use <std>
 
-func main() {
+pre func main() {
     std::echo("Hello, World!")
     std::pause()
 }
@@ -54,12 +54,12 @@ func add(a : int, b : int) -> int {
     return a + b
 }
 
-func main() {
+pre func main() {
     set x : int = 5
     set y : int = 10
     
     // Direct function call in expression & condition
-    if add(x, y) == 15 {
+    if (add(x, y) == 15) {
         writeln("Result is exactly 15!")
     }
 
@@ -77,7 +77,7 @@ func main() {
 use <psgraph>
 use <env>
 
-func main() {
+pre func main() {
     psgraph::hide_cursor()
     psgraph::clear()
 
@@ -101,12 +101,12 @@ use <std>
 
 func main() {
     // Range loops
-    for i : 1 to 5 step 1 {
+    for (i : 1 to 10) step 1 {
         writeln(i)
     }
 
     // Processing file lines
-    readline line in "data.txt" {
+    readline (line in "data.txt") {
         writeln(line)
     }
 }
@@ -123,7 +123,3 @@ csc script.csc
 ```
 
 This transpiles the script into optimized Go code and invokes the compiler to produce a standalone `.exe` binary ready to execute on Windows.
-
-```
-
-```
